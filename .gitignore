@@ -1,0 +1,42 @@
+/safety-service/.dockerignore
+*.class
+
+*.log
+
+target/
+build/
+out/
+bin/
+
+.mvn/wrapper/maven-wrapper.jar
+
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Eclipse
+.metadata/
+.classpath
+.project
+.settings/
+*.launch
+
+# VS Code
+.vscode/
+
+# Windows
+Thumbs.db
+desktop.ini
+
+### --- Logs & Temp --- ###
+tmp/
+temp/
+*.tmp
+*.bak
+*.swp
+*.dockerignore
+
+# gRPC generated files
+*_pb2.py
+*_pb2_grpc.py
