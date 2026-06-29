@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import nl.basjes.parse.useragent.UserAgent;
 import nl.basjes.parse.useragent.debug.UserAgentAnalyzerTester;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.Base64;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -29,45 +31,53 @@ public class LinkService {
     private final LinkDataService dataService;
     private final KafkaTemplate<String, ClickEvent> kafkaTemplate;
 
+    @Value("${app.link.default-ttl-days:30}")
+    private int defaultTtlDays;
+
     @GrpcClient("safety-service")
     private SafetyServiceGrpc.SafetyServiceBlockingStub safetyStub;
 
     @Transactional
-    public String shortenUrl(String longUrl) {
-        if (repository.findByLongUrl(longUrl).isPresent()) {
-            return repository.findByLongUrl(longUrl).get().getShortCode();
+    public String shortenUrl(String longUrl, Integer ttlDays) {
+        int effectiveTtl = (ttlDays != null && ttlDays > 0) ? ttlDays : defaultTtlDays;
+        LocalDateTime expiresAt = LocalDateTime.now().plusDays(effectiveTtl);
+
+        Optional<Link> existing = repository.findByLongUrl(longUrl);
+        if (existing.isPresent()) {
+            Link link = existing.get();
+            if (!link.isExpired()) {
+                return link.getShortCode();
+            }
+            // Re-activate the expired link with a fresh TTL instead of violating the unique constraint
+            link.setExpiresAt(expiresAt);
+            link.setCreatedAt(LocalDateTime.now());
+            dataService.evictFromCache(link.getShortCode());
+            return repository.save(link).getShortCode();
         }
 
         var request = CheckUrlRequest.newBuilder().setUrl(longUrl).build();
         var response = safetyStub.checkUrl(request);
-
         if (!response.getIsSafe()) {
             throw new UnsafeUrlException(longUrl);
         }
 
         byte[] urlBytes = longUrl.getBytes(StandardCharsets.UTF_8);
-
         XXHashFactory factory = XXHashFactory.fastestInstance();
         XXHash64 hash64 = factory.hash64();
-
-        long seed = 19;
-        long hashed = hash64.hash(urlBytes, 0, urlBytes.length, seed);
+        long hashed = hash64.hash(urlBytes, 0, urlBytes.length, 19L);
         ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
         buffer.putLong(hashed);
-        byte[] hashedBytes = buffer.array();
 
-        Base64.Encoder encoder = Base64.getUrlEncoder();
-
-        String code = encoder.encodeToString(hashedBytes);
+        String code = Base64.getUrlEncoder().encodeToString(buffer.array());
 
         Link link = Link.builder()
                 .longUrl(longUrl)
                 .shortCode(code)
                 .createdAt(LocalDateTime.now())
+                .expiresAt(expiresAt)
                 .build();
 
         repository.save(link);
-
         return code;
     }
 

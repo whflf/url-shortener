@@ -1,9 +1,11 @@
 package com.example.core_app.service;
 
+import com.example.core_app.exception.LinkExpiredException;
 import com.example.core_app.model.Link;
 import com.example.core_app.repository.LinkRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,8 +18,15 @@ public class LinkDataService {
 
     @Cacheable(value = "links", key = "#code")
     public String getUrlFromDb(String code) {
-        return repository.findByShortCode(code)
-                .map(Link::getLongUrl)
-                .orElseThrow(() -> new EntityNotFoundException("Link not found"));
+        Link link = repository.findByShortCode(code)
+                .orElseThrow(() -> new EntityNotFoundException("Link not found for code: " + code));
+        if (link.isExpired()) {
+            throw new LinkExpiredException(code);
+        }
+        return link.getLongUrl();
+    }
+
+    @CacheEvict(value = "links", key = "#code")
+    public void evictFromCache(String code) {
     }
 }

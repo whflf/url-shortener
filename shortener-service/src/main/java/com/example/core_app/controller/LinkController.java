@@ -1,6 +1,9 @@
 package com.example.core_app.controller;
 
+import com.example.core_app.dto.ShortenRequest;
+import com.example.core_app.dto.ShortenResponse;
 import com.example.core_app.service.LinkService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,9 +17,9 @@ public class LinkController {
     private final LinkService service;
 
     @PostMapping("/api/v1/shorten")
-    public ResponseEntity<String> shorten(@RequestBody String longUrl) {
-        String code = service.shortenUrl(longUrl);
-        return ResponseEntity.ok("http://localhost:8080/" + code);
+    public ResponseEntity<ShortenResponse> shorten(@Valid @RequestBody ShortenRequest request) {
+        String code = service.shortenUrl(request.url(), request.ttlDays());
+        return ResponseEntity.ok(new ShortenResponse("http://localhost:8080/" + code));
     }
 
     @GetMapping("/{code}")
