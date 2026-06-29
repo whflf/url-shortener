@@ -27,4 +27,11 @@ public class Link {
     private String shortCode;
 
     private LocalDateTime createdAt;
+
+    @Column
+    private LocalDateTime expiresAt;
+
+    public boolean isExpired() {
+        return expiresAt != null && LocalDateTime.now().isAfter(expiresAt);
+    }
 }
