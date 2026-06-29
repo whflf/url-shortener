@@ -4,13 +4,13 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.example</groupId>
-        <artifactId>url-shortener-parent</artifactId>
+        <artifactId>url-shortener</artifactId>
         <version>0.0.1-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <groupId>org.example</groupId>
     <artifactId>analytics-service</artifactId>
-    <name>analytics</name>
+    <name>analytics-service</name>
     <description>analytics</description>
     <url/>
     <licenses>

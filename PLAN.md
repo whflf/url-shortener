@@ -45,19 +45,19 @@ Branch: `feat/rate-limiting` (from `feat/link-ttl`)
 
 ---
 
-## [ ] feat/tests — Comprehensive test coverage
+## [x] feat/tests — Comprehensive test coverage (DONE)
 
 Branch: `feat/tests` (from `feat/rate-limiting`)
 
 ### Files to create
-- [ ] `service/LinkServiceTest.java` — Mockito unit tests (shortenUrl, getOriginalUrl)
-- [ ] `service/LinkDataServiceTest.java` — Mockito unit tests (hit, miss, expired)
-- [ ] `controller/LinkControllerTest.java` — `@WebMvcTest` (2xx, 4xx, 410, 429)
-- [ ] `config/RateLimitInterceptorTest.java` — pure unit tests (under limit, over limit, X-Forwarded-For)
-- [ ] `resources/application-test.properties` — disable scheduling, high rate limits
+- [x] `service/LinkServiceTest.java` — Mockito unit tests (shortenUrl, getOriginalUrl)
+- [x] `service/LinkDataServiceTest.java` — Mockito unit tests (hit, miss, expired)
+- [x] `controller/LinkControllerTest.java` — `@WebMvcTest` (2xx, 4xx, 410, 429)
+- [x] `config/RateLimitInterceptorTest.java` — pure unit tests (under limit, over limit, X-Forwarded-For)
+- [x] `resources/application-test.properties` — disable scheduling, high rate limits
 
 ### Files to modify
-- [ ] `UrlShortenerApplicationTests.java` — add `@MockBean` so context loads without infra
+- [x] `UrlShortenerApplicationTests.java` — add `@MockBean` so context loads without infra
 
 ---
 
